@@ -71,7 +71,7 @@ class ClientController extends Controller
     }
 
     if ($request->has('phone') && !empty($request->input('phone'))) {
-        $query->orWhere('phone', 'like', '%' . $request->input('phone') . '%');
+        $query->orWhere('phone', 'like', $request->input('phone') . '%');
     }
 
     $clients = $query->select('id', 'name', 'phone')->get();
