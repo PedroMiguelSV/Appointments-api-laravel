@@ -11,11 +11,9 @@ use Exception;
 
 class AuthController extends Controller
 {
-    // Método para registrar un nuevo usuario
     public function register(Request $request)
     {
         try {
-            // Validar los datos recibidos
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
@@ -30,25 +28,22 @@ class AuthController extends Controller
                 'password.confirmed' => 'La confirmación de la contraseña no coincide.'
             ]);
 
-            // Retornar los errores de validación si fallan
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            // Crear el nuevo usuario
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
 
-            // Generar el token JWT para el usuario recién creado
             $token = JWTAuth::fromUser($user);
 
             return response()->json([
                 'user' => $user,
                 'token' => $token,
-                'expires_in' => JWTAuth::factory()->getTTL() * 60 // Tiempo de expiración en segundos
+                'expires_in' => JWTAuth::factory()->getTTL() * 60 
             ], 201);
 
         } catch (Exception $e) {
@@ -58,11 +53,9 @@ class AuthController extends Controller
         }
     }
 
-    // Método para manejar el login de usuarios
     public function login(Request $request)
     {
         try {
-        // Validar los campos antes de intentar autenticar
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:6',
@@ -73,23 +66,19 @@ class AuthController extends Controller
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
         ]);
     
-        // Si la validación falla, devolver los errores de validación
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
     
-        // Obtener las credenciales del request
         $credentials = $request->only('email', 'password');
     
-        // Intentar autenticar y generar un token
         if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json(['error' => 'Las credenciales son incorrectas.'], 401);
         }
     
-        // Si el login es exitoso, retornar el token
         return response()->json([
             'token' => $token,
-            'expires_in' => JWTAuth::factory()->getTTL() * 60 // Tiempo de expiración en segundos
+            'expires_in' => JWTAuth::factory()->getTTL() * 60 
         ], 200);
 
     } catch (Exception $e) {
@@ -100,7 +89,6 @@ class AuthController extends Controller
     }
     
 
-    // Método para retornar la información del usuario autenticado
     public function me()
     {
         try {
@@ -111,7 +99,6 @@ class AuthController extends Controller
         }
     }
 
-    // Método para cerrar la sesión
     public function logout()
     {
         try {
@@ -122,14 +109,13 @@ class AuthController extends Controller
         }
     }
 
-    // Método para refrescar el token JWT
     public function refresh()
     {
         try {
             $newToken = JWTAuth::refresh();
             return response()->json([
                 'token' => $newToken,
-                'expires_in' => JWTAuth::factory()->getTTL() * 60 // Tiempo de expiración en segundos
+                'expires_in' => JWTAuth::factory()->getTTL() * 60 
             ]);
         } catch (Exception $e) {
             return response()->json(['error' => 'No se pudo refrescar el token.'], 500);
