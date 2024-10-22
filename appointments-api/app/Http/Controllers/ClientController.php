@@ -94,11 +94,16 @@ class ClientController extends Controller
         $query->orWhere('phone', 'like', '%' . $request->input('phone') . '%');
     }
 
-    $clients = $query->select('id', 'name', 'phone')->get();
+    $clients = $query->select('id', 'email', 'name', 'phone')->get();
 
     if ($clients->isEmpty()) {
         return response()->json([], 200);  
     }
+    
+    return response()->json($clients);
+    }
+}
+
     
     return response()->json($clients);
     }
