@@ -103,8 +103,3 @@ class ClientController extends Controller
     return response()->json($clients);
     }
 }
-
-    
-    return response()->json($clients);
-    }
-}
