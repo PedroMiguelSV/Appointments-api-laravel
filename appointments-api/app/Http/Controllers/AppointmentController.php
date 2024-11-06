@@ -6,7 +6,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentsView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AppointmentController extends Controller
 {
@@ -23,7 +23,19 @@ class AppointmentController extends Controller
             'note' => 'nullable|string|max:255',                  
             'date' => 'required|date',                    
             'time' => 'required|date_format:H:i',         
-            'services' => 'array|exists:services,id',  
+            'services' => 'required|array|exists:services,id',  
+        ], [
+            'client_id.required' => 'El cliente es obligatorio.',
+            'client_id.exists' => 'El cliente seleccionado no es válido.',
+            'note.string' => 'La nota debe ser un texto válido.',
+            'note.max' => 'La nota no puede exceder los 255 caracteres.',
+            'date.required' => 'La fecha es obligatoria.',
+            'date.date' => 'La fecha debe tener un formato válido.',
+            'time.required' => 'La hora es obligatoria.',
+            'time.date_format' => 'La hora debe tener el formato HH:mm.',
+            'services.required' => 'El servicio es obligatorio.',
+            'services.array' => 'Los servicios deben ser un arreglo.',
+            'services.exists' => 'Algunos servicios no son válidos.',
         ]);
 
         if ($validator->fails()) {
@@ -41,8 +53,12 @@ class AppointmentController extends Controller
 
     public function show($id)
     {
-        $appointment = Appointment::with('client', 'services')->findOrFail($id);
-        return response()->json($appointment);
+        try {
+            $appointment = Appointment::with('client', 'services')->findOrFail($id);
+            return response()->json($appointment);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
     }
 
     public function update(Request $request, $id)
@@ -52,7 +68,19 @@ class AppointmentController extends Controller
             'note' => 'sometimes|nullable|string|max:255',   
             'date' => 'sometimes|required|date',                    
             'time' => 'sometimes|required|date_format:H:i',        
-            'services' => 'sometimes|array|exists:services,id', 
+            'services' => 'sometimes|required|array|exists:services,id', 
+        ], [
+            'client_id.required' => 'El cliente es obligatorio.',
+            'client_id.exists' => 'El cliente seleccionado no es válido.',
+            'note.string' => 'La nota debe ser un texto válido.',
+            'note.max' => 'La nota no puede exceder los 255 caracteres.',
+            'date.required' => 'La fecha es obligatoria.',
+            'date.date' => 'La fecha debe tener un formato válido.',
+            'time.required' => 'La hora es obligatoria.',
+            'time.date_format' => 'La hora debe tener el formato HH:mm.',
+            'services.required' => 'El servicio es obligatorio.',
+            'services.array' => 'Los servicios deben ser un arreglo.',
+            'services.exists' => 'Algunos servicios no son válidos.',
         ]);
 
         if ($validator->fails()) {
@@ -72,10 +100,10 @@ class AppointmentController extends Controller
     public function destroy($id)
     {
         $appointment = Appointment::findOrFail($id);
-        $appointment->services()->detach(); 
+        $appointment->services()->detach();
         $appointment->delete();
-        
-        return response()->json(null, 204);
+
+        return response()->json(['mensaje' => 'Cita eliminada con éxito.'], 204);
     }
 
     public function indexView()

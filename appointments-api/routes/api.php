@@ -7,13 +7,16 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ServiceController;
 
-Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware(['jwt.auth'])->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::get('users', [AuthController::class, 'index']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::get('me', [AuthController::class, 'me']);
+    Route::delete('users/{id}', [AuthController::class, 'destroy']);
+
 
     Route::get('clients', [ClientController::class, 'index']);
     Route::post('clients', [ClientController::class, 'store']);

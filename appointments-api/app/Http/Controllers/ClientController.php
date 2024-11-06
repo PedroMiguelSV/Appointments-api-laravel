@@ -21,6 +21,12 @@ class ClientController extends Controller
             'name' => 'required|string|max:100',
             'email' => 'required|email|unique:clients,email',
             'phone' => 'required|string|max:20',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electronico es obligatorio.',
+            'email.unique' => 'El correo electronico ya esta registrado.',
+            'email.email' => 'El correo electronico no es valido.',
+            'phone.required' => 'el telefono es obligatorio.'
         ]);
 
         if ($validator->fails()) {
@@ -33,9 +39,13 @@ class ClientController extends Controller
 
     public function show($id)
     {
-        $client = Client::findOrFail($id);
+        $client = Client::find($id);
+        if (!$client) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
         return response()->json($client);
     }
+    
 
     public function update(Request $request, $id)
     {
@@ -43,7 +53,14 @@ class ClientController extends Controller
             'name' => 'sometimes|required|string|max:100',
             'email' => 'sometimes|required|email|unique:clients,email,' . $id,
             'phone' => 'sometimes|required|string|max:20',
-        ]);
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electronico es obligatorio.',
+            'email.unique' => 'El correo electronico ya esta registrado.',
+            'email.email' => 'El correo electronico no es valido.',
+            'phone.required' => 'el telefono es obligatorio.'
+        ]
+    );
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
@@ -56,31 +73,33 @@ class ClientController extends Controller
 
     public function destroy($id)
     {
-        $client = Client::findOrFail($id);
-        $client->delete();
-        return response()->json(null, 204);
+        try {
+            $client = Client::findOrFail($id);
+            $client->delete();
+            return response()->json(['message' => 'Cliente eliminado exitosamente.'], 204);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
     }
-
-
+    
     public function search(Request $request)
-{
+    {
     $query = Client::query();
 
     if ($request->has('name') && !empty($request->input('name'))) {
-        $query->where('name', 'like', $request->input('name') . '%');
+        $query->where('name', 'like', '%' . $request->input('name') . '%');
     }
 
     if ($request->has('phone') && !empty($request->input('phone'))) {
         $query->orWhere('phone', 'like', '%' . $request->input('phone') . '%');
     }
 
-    $clients = $query->select('id', 'name', 'phone')->get();
+    $clients = $query->select('id', 'email', 'name', 'phone')->get();
 
     if ($clients->isEmpty()) {
         return response()->json([], 200);  
     }
     
     return response()->json($clients);
-}
-
+    }
 }
