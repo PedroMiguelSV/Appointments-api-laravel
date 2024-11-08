@@ -41,7 +41,7 @@ class ClientController extends Controller
     {
         $client = Client::find($id);
         if (!$client) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
+            return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
         return response()->json($client);
     }
@@ -78,7 +78,7 @@ class ClientController extends Controller
             $client->delete();
             return response()->json(['message' => 'Cliente eliminado exitosamente.'], 204);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
+            return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
     }
     

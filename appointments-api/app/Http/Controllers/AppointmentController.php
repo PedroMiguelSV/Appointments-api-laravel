@@ -57,7 +57,7 @@ class AppointmentController extends Controller
             $appointment = Appointment::with('client', 'services')->findOrFail($id);
             return response()->json($appointment);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
+            return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
     }
 

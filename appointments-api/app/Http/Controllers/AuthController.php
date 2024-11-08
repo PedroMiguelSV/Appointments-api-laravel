@@ -130,12 +130,17 @@ class AuthController extends Controller
 
     public function destroy($id)
     {
-        try{
+        try {
+            if (User::count() <= 1) {
+                return response()->json(['error' => 'No se puede eliminar el último usuario.'], 403);
+            }
+    
             $user = User::findOrFail($id);
             $user->delete();
+    
             return response()->json(['message' => 'Usuario eliminado exitosamente.'], 204);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
-    }
+    }    
 }
