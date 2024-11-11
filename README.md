@@ -8,6 +8,7 @@
 Una API desarrollada en Laravel para la gestión de citas. Esta API permite el manejo de usuarios, clientes, servicios y citas, proporcionando autenticación segura mediante JWT.  
 
 ## Tabla de Contenidos  
+   ### appointments-api  
 - [Características](#características)  
 - [Requisitos](#requisitos)  
 - [Instalación](#instalación)  
@@ -18,6 +19,12 @@ Una API desarrollada en Laravel para la gestión de citas. Esta API permite el m
 - [Consideraciones de Seguridad](#consideraciones-de-seguridad)  
 - [Contribuciones](#contribuciones)  
 - [Licencia](#licencia)  
+   ### Guía de Configuración en Postman  
+- [Requisitos Previos](#Requisitos-Previos)  
+- [Instrucciones de Configuración](#Instrucciones-de-Configuración)  
+- [Instrucciones de Uso](#Instrucciones-de-Uso)  
+- [Organización de la Colección](#Organización-de-la-Colección)  
+- [Tips y Recomendaciones](#Tips-y-Recomendaciones)  
 
 ## Características  
 - Autenticación de usuarios con JWT.  
@@ -31,7 +38,7 @@ Una API desarrollada en Laravel para la gestión de citas. Esta API permite el m
 - Composer  
 - MySQL  
 - Laravel >= 11  
-- XAMPP o un entorno de servidor similar para desarrollo  
+- XAMPP o un entorno de servidor similar para desarrollo.(Para crear la base datos)  
 
 ## Instalación  
 
@@ -121,7 +128,7 @@ La API estará disponible en `http://localhost:8000`.
 |--------|------------------------|-----------------------------------|
 | GET    | `/appointments`       | Listar todas las citas            |
 | POST   | `/appointments`       | Crear una nueva cita              |
-| GET    | `/appointments/view`   | Vista consolidada de citas        |
+| GET    | `/appointments/view`   | Vista de citas        |
 | GET    | `/appointments/{id}`   | Mostrar una cita específica       |
 | PUT    | `/appointments/{id}`   | Actualizar una cita               |
 | DELETE | `/appointments/{id}`   | Eliminar una cita                 |
@@ -135,7 +142,8 @@ Las contribuciones son bienvenidas. Por favor, abre un issue o envía un pull re
 
 ## Licencia  
 Este proyecto está bajo la licencia MIT.  
-
+  
+  
 # 🌐 Guía de Configuración en Postman  
 
 Esta colección te permite realizar operaciones CRUD (Crear, Leer, Actualizar y Eliminar) en la API de citas. Sigue estos pasos para configurar y usar la colección y el entorno en Postman.  
