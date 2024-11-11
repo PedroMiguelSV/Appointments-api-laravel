@@ -11,15 +11,114 @@
 			"name": "Auth",
 			"item": [
 				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"const token = response.token;\r",
+									"const expiresIn = response.expires_in;\r",
+									"\r",
+									"const expiresAt = Date.now() + expiresIn * 1000 - 60000;\r",
+									"\r",
+									"pm.environment.set(\"token\", token);\r",
+									"pm.environment.set(\"expires_at\", expiresAt);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"Admin@example.com\",\r\n  \"password\": \"password\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "register",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Successful POST request\", function () {",
-									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
-									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const expiresAt = pm.environment.get(\"expires_at\");\r",
+									"\r",
+									"if (Date.now() > expiresAt - 900000) {\r",
+									"    pm.sendRequest({\r",
+									"        url: 'http://localhost:8000/api/refresh',\r",
+									"        method: 'POST',\r",
+									"        header: {\r",
+									"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+									"        }\r",
+									"    }, function (err, res) {\r",
+									"        if (err || !res) {\r",
+									"            console.error(\"Error al refrescar el token:\", err);\r",
+									"            pm.environment.unset(\"token\");\r",
+									"            pm.environment.unset(\"expires_at\");\r",
+									"        } else {\r",
+									"            const newToken = res.json().token;\r",
+									"            const newExpiresIn = res.json().expires_in;\r",
+									"\r",
+									"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+									"            pm.environment.set(\"token\", newToken);\r",
+									"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+									"        }\r",
+									"    });\r",
+									"}\r",
 									""
 								],
 								"type": "text/javascript",
@@ -33,7 +132,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzMwODg3NjczLCJleHAiOjE3MzA4OTEyNzMsIm5iZiI6MTczMDg4NzY3MywianRpIjoiNGhGaUFiaHc1bURtb0dJWCIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.rBSbHYV6DBgDjthr53lOLsv9A2k_7VvqynscfLXX9cw",
+									"value": "{{token}}",
 									"type": "string"
 								}
 							]
@@ -72,52 +171,50 @@
 					"response": []
 				},
 				{
-					"name": "login",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n  \"email\": \"Admin@example.com\",\r\n  \"password\": \"password\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://localhost:8000/api/login",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"api",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "me",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const expiresAt = pm.environment.get(\"expires_at\");\r",
+									"\r",
+									"if (Date.now() > expiresAt - 900000) {\r",
+									"    pm.sendRequest({\r",
+									"        url: 'http://localhost:8000/api/refresh',\r",
+									"        method: 'POST',\r",
+									"        header: {\r",
+									"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+									"        }\r",
+									"    }, function (err, res) {\r",
+									"        if (err || !res) {\r",
+									"            console.error(\"Error al refrescar el token:\", err);\r",
+									"            pm.environment.unset(\"token\");\r",
+									"            pm.environment.unset(\"expires_at\");\r",
+									"        } else {\r",
+									"            const newToken = res.json().token;\r",
+									"            const newExpiresIn = res.json().expires_in;\r",
+									"\r",
+									"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+									"            pm.environment.set(\"token\", newToken);\r",
+									"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+									"        }\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjE5NzY5LCJleHAiOjE3Mjc2MjMzNjksIm5iZiI6MTcyNzYxOTc2OSwianRpIjoiY1hSVGdLRlBCcGZMVXRURyIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.yaT1MsSnr9FdZ2mhBde5y0WERUZBO5_R2yHb1vxknJ0",
+									"value": "{{token}}",
 									"type": "string"
 								}
 							]
@@ -147,13 +244,35 @@
 				},
 				{
 					"name": "refresh",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"\r",
+									"if (response.token && response.expires_in) {\r",
+									"    pm.environment.set(\"token\", response.token);\r",
+									"\r",
+									"    const newExpiresAt = Date.now() + response.expires_in * 1000 - 60000;\r",
+									"    pm.environment.set(\"expires_at\", newExpiresAt);\r",
+									"} else {\r",
+									"    console.error(\"No se recibió un token de refresco.\");\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI4MzQ3NjE3LCJleHAiOjE3MjgzNDc3OTcsIm5iZiI6MTcyODM0NzYxNywianRpIjoiclNwcW9HdjdmMzh6TGg2bCIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.XBSrTA6k1Q5VpDZwHx1ZQIPBYWxMDdv9Y9mKFtRV8Yk",
+									"value": "{{token}}",
 									"type": "string"
 								}
 							]
@@ -182,43 +301,42 @@
 					"response": []
 				},
 				{
-					"name": "logout",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzMwODg3NjczLCJleHAiOjE3MzA4OTEyNzMsIm5iZiI6MTczMDg4NzY3MywianRpIjoiNGhGaUFiaHc1bURtb0dJWCIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.rBSbHYV6DBgDjthr53lOLsv9A2k_7VvqynscfLXX9cw",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:8000/api/logout",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"api",
-								"logout"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "index",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const expiresAt = pm.environment.get(\"expires_at\");\r",
+									"\r",
+									"if (Date.now() > expiresAt - 900000) {\r",
+									"    pm.sendRequest({\r",
+									"        url: 'http://localhost:8000/api/refresh',\r",
+									"        method: 'POST',\r",
+									"        header: {\r",
+									"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+									"        }\r",
+									"    }, function (err, res) {\r",
+									"        if (err || !res) {\r",
+									"            console.error(\"Error al refrescar el token:\", err);\r",
+									"            pm.environment.unset(\"token\");\r",
+									"            pm.environment.unset(\"expires_at\");\r",
+									"        } else {\r",
+									"            const newToken = res.json().token;\r",
+									"            const newExpiresIn = res.json().expires_in;\r",
+									"\r",
+									"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+									"            pm.environment.set(\"token\", newToken);\r",
+									"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+									"        }\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -228,7 +346,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzMwODg3NjczLCJleHAiOjE3MzA4OTEyNzMsIm5iZiI6MTczMDg4NzY3MywianRpIjoiNGhGaUFiaHc1bURtb0dJWCIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.rBSbHYV6DBgDjthr53lOLsv9A2k_7VvqynscfLXX9cw",
+									"value": "{{token}}",
 									"type": "string"
 								}
 							]
@@ -267,13 +385,49 @@
 				},
 				{
 					"name": "destroy",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const expiresAt = pm.environment.get(\"expires_at\");\r",
+									"\r",
+									"if (Date.now() > expiresAt - 900000) {\r",
+									"    pm.sendRequest({\r",
+									"        url: 'http://localhost:8000/api/refresh',\r",
+									"        method: 'POST',\r",
+									"        header: {\r",
+									"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+									"        }\r",
+									"    }, function (err, res) {\r",
+									"        if (err || !res) {\r",
+									"            console.error(\"Error al refrescar el token:\", err);\r",
+									"            pm.environment.unset(\"token\");\r",
+									"            pm.environment.unset(\"expires_at\");\r",
+									"        } else {\r",
+									"            const newToken = res.json().token;\r",
+									"            const newExpiresIn = res.json().expires_in;\r",
+									"\r",
+									"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+									"            pm.environment.set(\"token\", newToken);\r",
+									"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+									"        }\r",
+									"    });\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzMwODg3NjczLCJleHAiOjE3MzA4OTEyNzMsIm5iZiI6MTczMDg4NzY3MywianRpIjoiNGhGaUFiaHc1bURtb0dJWCIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.rBSbHYV6DBgDjthr53lOLsv9A2k_7VvqynscfLXX9cw",
+									"value": "{{token}}",
 									"type": "string"
 								}
 							]
@@ -290,7 +444,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/api/users/9",
+							"raw": "http://localhost:8000/api/users/7",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -299,7 +453,59 @@
 							"path": [
 								"api",
 								"users",
-								"9"
+								"7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.unset(\"token\");\r",
+									"pm.environment.unset(\"expires_at\");\r",
+									"\r",
+									"console.log(\"Variables de sesión eliminadas.\");\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8000/api/logout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logout"
 							]
 						}
 					},
@@ -315,6 +521,41 @@
 					"item": [
 						{
 							"name": "index",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true
 							},
@@ -324,7 +565,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5NTM5ODY0LCJleHAiOjE3Mjk1NDM0NjQsIm5iZiI6MTcyOTUzOTg2NCwianRpIjoiOUZCZjF4aHV5ak9YSUFjUSIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._rnssot6P3MujKwjAazPRnXR8epEl6nH58R0Y9ifKIk",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -357,13 +598,48 @@
 						},
 						{
 							"name": "store",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5NTIwMDQ3LCJleHAiOjE3Mjk1MjM2NDcsIm5iZiI6MTcyOTUyMDA0NywianRpIjoiaDdQTWJuRExqelNSOWNCaiIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.PADt98mugsinxJDWiYHAKiXY3yf53S76MUq22YEwtBk",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -378,7 +654,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"petra garcia\",\n  \"email\": \"raulo@example.com\",\n  \"phone\": \"755562868\"\n}",
+									"raw": "{\n  \"name\": \"Jorge Juan Fernandez\",\n  \"email\": \"Fernandez_41@example.com\",\n  \"phone\": \"658965248\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -402,13 +678,48 @@
 						},
 						{
 							"name": "update",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5NTM1MDQ4LCJleHAiOjE3Mjk1Mzg2NDgsIm5iZiI6MTcyOTUzNTA0OCwianRpIjoiakZYUEJ3czQ3aW5DWnFvNSIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.3vPyOfa17Pr5g4nDih1aDjc5gQo29h2IMTtSePEBwGs",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -417,7 +728,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"email\":\"raulo@example.com\"\n}",
+									"raw": "{\n        \"phone\": \"689652354\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -442,13 +753,48 @@
 						},
 						{
 							"name": "destroy",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -482,6 +828,41 @@
 						},
 						{
 							"name": "search",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true
 							},
@@ -491,7 +872,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5MjUwNjkyLCJleHAiOjE3MjkyNTQyOTIsIm5iZiI6MTcyOTI1MDY5MiwianRpIjoickJia3ZCenZ1QjFPdm5jaiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.YveZsxYYVFQSNUbxd5gbSMGWQyVqG16kDJToUET2cL4",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -500,7 +881,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n\"phone\": \"6\"\r\n}",
+									"raw": "{\r\n        \"name\": \"Jorge\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -530,6 +911,41 @@
 					"item": [
 						{
 							"name": "index",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true
 							},
@@ -539,7 +955,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5NTM5ODY0LCJleHAiOjE3Mjk1NDM0NjQsIm5iZiI6MTcyOTUzOTg2NCwianRpIjoiOUZCZjF4aHV5ak9YSUFjUSIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._rnssot6P3MujKwjAazPRnXR8epEl6nH58R0Y9ifKIk",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -572,13 +988,48 @@
 						},
 						{
 							"name": "store",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -587,7 +1038,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"limpieza piel\",\n    \"duration\": 44,\n    \"precio\": 14\n}",
+									"raw": "{\n    \"name\": \"limpieza piel\",\n    \"duration\": 25,\n    \"precio\": 14\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -611,13 +1062,58 @@
 						},
 						{
 							"name": "update",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -626,7 +1122,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"limpiezaa\"\n}",
+									"raw": "{\n        \"duration\": 25\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -634,7 +1130,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:8000/api/services/5",
+									"raw": "http://localhost:8000/api/services/1",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -643,7 +1139,7 @@
 									"path": [
 										"api",
 										"services",
-										"5"
+										"1"
 									]
 								}
 							},
@@ -651,13 +1147,48 @@
 						},
 						{
 							"name": "destroy",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -687,13 +1218,48 @@
 					"item": [
 						{
 							"name": "index",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5NTM5ODY0LCJleHAiOjE3Mjk1NDM0NjQsIm5iZiI6MTcyOTUzOTg2NCwianRpIjoiOUZCZjF4aHV5ak9YSUFjUSIsInN1YiI6IjciLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._rnssot6P3MujKwjAazPRnXR8epEl6nH58R0Y9ifKIk",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -717,13 +1283,48 @@
 						},
 						{
 							"name": "store",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -756,13 +1357,48 @@
 						},
 						{
 							"name": "update",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -796,13 +1432,48 @@
 						},
 						{
 							"name": "destroy",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI3NjIyNDEzLCJleHAiOjE3Mjc2MjYwMTMsIm5iZiI6MTcyNzYyMjQxMywianRpIjoiWGtzT0U3UHR5bWVtMU9JRiIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.EIzGbBx0PZX6oeuOd2nRzQ2mIIPB5fHesHr20F6BFcA",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
@@ -827,13 +1498,48 @@
 						},
 						{
 							"name": "index/view",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const expiresAt = pm.environment.get(\"expires_at\");\r",
+											"\r",
+											"if (Date.now() > expiresAt - 900000) {\r",
+											"    pm.sendRequest({\r",
+											"        url: 'http://localhost:8000/api/refresh',\r",
+											"        method: 'POST',\r",
+											"        header: {\r",
+											"            'Authorization': `Bearer ${pm.environment.get(\"token\")}`\r",
+											"        }\r",
+											"    }, function (err, res) {\r",
+											"        if (err || !res) {\r",
+											"            console.error(\"Error al refrescar el token:\", err);\r",
+											"            pm.environment.unset(\"token\");\r",
+											"            pm.environment.unset(\"expires_at\");\r",
+											"        } else {\r",
+											"            const newToken = res.json().token;\r",
+											"            const newExpiresIn = res.json().expires_in;\r",
+											"\r",
+											"            const newExpiresAt = Date.now() + newExpiresIn * 1000 - 900000; \r",
+											"            pm.environment.set(\"token\", newToken);\r",
+											"            pm.environment.set(\"expires_at\", newExpiresAt);\r",
+											"        }\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5MDQ2NTI2LCJleHAiOjE3MjkwNDY2NDYsIm5iZiI6MTcyOTA0NjUyNiwianRpIjoiN1BtcmJQSmNCNUxZeVFMSCIsInN1YiI6IjYiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.RNrZcNJ2Z6hHxfFw7mr-rNiOyStyUOAB8enn2QyYoZY",
+											"value": "{{token}}",
 											"type": "string"
 										}
 									]
