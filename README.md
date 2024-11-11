@@ -8,7 +8,7 @@
 Una API desarrollada en Laravel para la gestión de citas. Esta API permite el manejo de usuarios, clientes, servicios y citas, proporcionando autenticación segura mediante JWT.  
 
 ## Tabla de Contenidos  
-   ### appointments-api  
+### appointments-api  
 - [Características](#características)  
 - [Requisitos](#requisitos)  
 - [Instalación](#instalación)  
@@ -19,7 +19,7 @@ Una API desarrollada en Laravel para la gestión de citas. Esta API permite el m
 - [Consideraciones de Seguridad](#consideraciones-de-seguridad)  
 - [Contribuciones](#contribuciones)  
 - [Licencia](#licencia)  
-   ### Guía de Configuración en Postman  
+### Guía de Configuración en Postman  
 - [Requisitos Previos](#Requisitos-Previos)  
 - [Instrucciones de Configuración](#Instrucciones-de-Configuración)  
 - [Instrucciones de Uso](#Instrucciones-de-Uso)  
@@ -155,20 +155,20 @@ Esta colección te permite realizar operaciones CRUD (Crear, Leer, Actualizar y 
 
 ## Instrucciones de Configuración  
 
-### 1️⃣ Importar la Colección en Postman  
+### Importar la Colección en Postman  
 
 1. Abre Postman.  
 2. En la esquina superior izquierda, selecciona **Import**.  
 3. Arrastra y suelta el archivo `appointments-collection.json` o selecciona el archivo manualmente.  
 4. Postman importará las solicitudes de la API en una colección llamada **Appointment API**.  
 
-### 2️⃣ Importar el Entorno en Postman  
+### Importar el Entorno en Postman  
 
 1. Dirígete a la pestaña **Environments** en Postman (menú superior derecho).  
 2. Haz clic en **Import** y selecciona `appointments-environment.json`.  
 3. Una vez importado, selecciona el entorno `Appointment API` para activarlo.  
 
-### 3️⃣ Configuración Automática del Token de Autenticación  
+### Configuración Automática del Token de Autenticación  
 
 - La colección incluye un script de autenticación en la solicitud **Login** que guarda el token y su tiempo de expiración en variables de entorno.  
 - Para cada solicitud protegida:  
