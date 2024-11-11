@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Exception;
 
 class ServiceController extends Controller
 {
     public function index()
     {
-        return response()->json(Service::all());
+        try {
+            return response()->json(Service::all());
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar cargar la lista de servicios.'
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -33,17 +39,17 @@ class ServiceController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'mensaje' => 'Errores de validación',
-                'errores' => $validator->errors(),
-            ], 422);
+            return response()->json($validator->errors(), 422);
         }
 
-        $service = Service::create($request->all());
-        return response()->json([
-            'mensaje' => 'Servicio creado con éxito',
-            'data' => $service,
-        ], 201);
+        try {
+            $service = Service::create($request->all());
+            return response()->json($service, 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar guardar el servicio.'
+            ], 500);
+        }
     }
 
     public function show($id)
@@ -51,8 +57,10 @@ class ServiceController extends Controller
         try {
             $service = Service::findOrFail($id);
             return response()->json($service);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['mensaje' => 'El servicio no fue encontrado'], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'El servicio no fue encontrado'
+            ], 404);
         }
     }
 
@@ -75,22 +83,17 @@ class ServiceController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'mensaje' => 'Errores de validación',
-                'errores' => $validator->errors(),
-            ], 422);
+            return response()->json($validator->errors(), 422);
         }
 
         try {
             $service = Service::findOrFail($id);
             $service->update($request->all());
-
+            return response()->json($service);
+        } catch (Exception $e) {
             return response()->json([
-                'mensaje' => 'Servicio actualizado con éxito',
-                'data' => $service,
-            ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['mensaje' => 'El servicio no fue encontrado'], 404);
+                'error' => 'Ocurrió un error al intentar actualizar el servicio.'
+            ], 500);
         }
     }
 
@@ -99,9 +102,9 @@ class ServiceController extends Controller
         try {
             $service = Service::findOrFail($id);
             $service->delete();
-            return response()->json(['mensaje' => 'Servicio eliminado con éxito'], 204);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['mensaje' => 'El servicio no fue encontrado'], 404);
+            return response()->json(['mensaje' => 'Servicio eliminado con éxito'], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar eliminar el servicio.'], 500);
         }
     }
 }

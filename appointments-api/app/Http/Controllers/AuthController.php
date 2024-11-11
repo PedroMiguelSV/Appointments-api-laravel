@@ -14,31 +14,37 @@ class AuthController extends Controller
 
     public function index()
     {
-        $users = User::all();
-        return response()->json($users);
+        try {
+            $users = User::all();
+            return response()->json($users);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar cargar la lista de usuarios.'
+            ], 500);
+        }
     }
 
     public function register(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.unique' => 'El correo electrónico ya está registrado.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:6|confirmed',
-            ], [
-                'name.required' => 'El nombre es obligatorio.',
-                'email.required' => 'El correo electrónico es obligatorio.',
-                'email.unique' => 'El correo electrónico ya está registrado.',
-                'email.email' => 'El correo electrónico no es válido.',
-                'password.required' => 'La contraseña es obligatoria.',
-                'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-                'password.confirmed' => 'La confirmación de la contraseña no coincide.'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-            }
-
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -62,7 +68,6 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        try {
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:6',
@@ -77,21 +82,21 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
     
-        $credentials = $request->only('email', 'password');
-    
-        if (!$token = JWTAuth::attempt($credentials)) {
-            return response()->json(['error' => 'Las credenciales son incorrectas.'], 401);
-        }
-    
-        return response()->json([
-            'token' => $token,
-            'expires_in' => JWTAuth::factory()->getTTL() * 60
-        ], 200);
-
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => 'Ocurrió un error al intentar hacer login.'
-        ], 500);
+        try {
+            $credentials = $request->only('email', 'password');
+        
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json(['error' => 'Las credenciales son incorrectas.'], 401);
+            }
+        
+            return response()->json([
+                'token' => $token,
+                'expires_in' => JWTAuth::factory()->getTTL() * 60
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar hacer login.'
+            ], 500);
         }
     }
     
@@ -130,16 +135,15 @@ class AuthController extends Controller
 
     public function destroy($id)
     {
+        if (User::count() <= 1) {
+            return response()->json(['error' => 'No se puede eliminar el último usuario.'], 403);
+        }
+
         try {
-            if (User::count() <= 1) {
-                return response()->json(['error' => 'No se puede eliminar el último usuario.'], 403);
-            }
-    
             $user = User::findOrFail($id);
             $user->delete();
-    
-            return response()->json(['message' => 'Usuario eliminado exitosamente.'], 204);
-        } catch (\Exception $e) {
+            return response()->json(['message' => 'Usuario eliminado exitosamente.'], 200);
+        } catch (Exception $e) {
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
     }    

@@ -6,14 +6,18 @@ use App\Models\Appointment;
 use App\Models\AppointmentsView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Exception;
 
 class AppointmentController extends Controller
 {
-
     public function index()
     {
-        return response()->json(Appointment::with('client', 'services')->get());
+        try {
+            return response()->json(Appointment::with('client', 'services')->get());
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar cargar las citas.'], 500);
+        }
     }
 
     public function store(Request $request)
@@ -42,13 +46,19 @@ class AppointmentController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $appointment = Appointment::create($request->all());
+        try {
+            $appointment = Appointment::create($request->all());
 
-        if ($request->has('services')) {
-            $appointment->services()->attach($request->services);
+            if ($request->has('services')) {
+                $appointment->services()->attach($request->services);
+            }
+
+            return response()->json($appointment, 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar guardar cita.'
+            ], 500);
         }
-
-        return response()->json($appointment, 201);
     }
 
     public function show($id)
@@ -56,8 +66,8 @@ class AppointmentController extends Controller
         try {
             $appointment = Appointment::with('client', 'services')->findOrFail($id);
             return response()->json($appointment);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Cliente no encontrado'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Cita no encontrada'], 404);
         }
     }
 
@@ -87,29 +97,44 @@ class AppointmentController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $appointment = Appointment::findOrFail($id);
-        $appointment->update($request->all());
+        try {
+            $appointment = Appointment::findOrFail($id);
+            $appointment->update($request->all());
 
-        if ($request->has('services')) {
-            $appointment->services()->sync($request->services);
+            if ($request->has('services')) {
+                $appointment->services()->sync($request->services);
+            }
+
+            return response()->json($appointment);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar actualizar la cita.'
+            ], 500);
         }
-
-        return response()->json($appointment);
     }
 
     public function destroy($id)
     {
-        $appointment = Appointment::findOrFail($id);
-        $appointment->services()->detach();
-        $appointment->delete();
+        try {
+            $appointment = Appointment::findOrFail($id);
+            $appointment->services()->detach();
+            $appointment->delete();
 
-        return response()->json(['mensaje' => 'Cita eliminada con éxito.'], 204);
+            return response()->json(['mensaje' => 'Cita eliminada con éxito.'], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar eliminar la cita'], 500);
+        }
     }
 
     public function indexView()
     {
-        $appointments = AppointmentsView::all();
-
-        return response()->json($appointments);
+        try {
+            $appointments = AppointmentsView::all();
+            return response()->json($appointments);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error al intentar cargar la vista'
+            ], 500);
+        }        
     }
 }
