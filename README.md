@@ -144,16 +144,16 @@ Las contribuciones son bienvenidas. Por favor, abre un issue o envía un pull re
 Este proyecto está bajo la licencia MIT.  
   
   
-# 🌐 Guía de Configuración en Postman  
+# Guía de Configuración en Postman  
 
 Esta colección te permite realizar operaciones CRUD (Crear, Leer, Actualizar y Eliminar) en la API de citas. Sigue estos pasos para configurar y usar la colección y el entorno en Postman.  
 
-## 📋 Requisitos Previos  
+## Requisitos Previos  
 
 1. **Postman**: Asegúrate de tener Postman instalado. Puedes descargarlo desde [aquí](https://www.postman.com/downloads/).  
 2. **Archivos de la Colección y Entorno**: Descarga los archivos `appointments-collection.json` y `appointments-environment.json` desde este repositorio.  
 
-## 🚀 Instrucciones de Configuración  
+## Instrucciones de Configuración  
 
 ### 1️⃣ Importar la Colección en Postman  
 
@@ -175,7 +175,7 @@ Esta colección te permite realizar operaciones CRUD (Crear, Leer, Actualizar y 
 - En la pestaña **Authorization** de cada solicitud, se utiliza el tipo **Bearer Token** con la variable `{{token}}`, asegurando que el token se añada automáticamente.  
 - Antes de cada solicitud, un script en **Pre-request Script** verifica si el token está próximo a expirar. Si es necesario, envía una solicitud de refresco del token a `/api/refresh`.  
 
-## 📝 Instrucciones de Uso  
+## Instrucciones de Uso  
 
 1. **Inicia sesión**: Ejecuta la solicitud **Login** en la carpeta `Auth` y proporciona las credenciales.  
 2. **Realiza solicitudes**:  
@@ -183,7 +183,7 @@ Esta colección te permite realizar operaciones CRUD (Crear, Leer, Actualizar y 
 3. **Manejo Automático del Token**:  
    - La colección está configurada para verificar la expiración del token antes de cada solicitud y solicitar un nuevo token si está próximo a expirar.  
 
-## 📂 Organización de la Colección  
+## Organización de la Colección  
 
 La colección está organizada en varias carpetas para facilitar la navegación:  
 
@@ -192,7 +192,7 @@ La colección está organizada en varias carpetas para facilitar la navegación:
 - **CRUD de Servicios**: Incluye operaciones CRUD para manejar servicios.  
 - **CRUD de Citas**: Incluye operaciones CRUD para manejar citas.  
 
-## 💡 Tips y Recomendaciones  
+## Tips y Recomendaciones  
 
 - **Verifica el Entorno**: Asegúrate de que el entorno `Appointment API` esté activo para que se utilicen las variables correctamente.  
 - **Scripts Personalizados**: La colección utiliza scripts para el manejo automático del token y la expiración, optimizando el flujo de trabajo en Postman.  
