@@ -24,7 +24,7 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:clients,email',
+            'email' => 'required|email|max:255|unique:clients,email',
             'phone' => 'required|string|max:20',
         ], [
             'name.required' => 'El nombre es obligatorio.',
@@ -64,7 +64,7 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:100',
-            'email' => 'sometimes|required|email|unique:clients,email,' . $id,
+            'email' => 'sometimes|required|email|max:255|unique:clients,email',
             'phone' => 'sometimes|required|string|max:20',
         ], [
             'name.required' => 'El nombre es obligatorio.',

@@ -147,7 +147,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"example\",\n  \"email\": \"example@example.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\"\n}\n",
+							"raw": "{\n  \"name\": \"example\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -728,7 +728,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n        \"phone\": \"689652354\"\n}",
+									"raw": "{\n        \"email\": \"torres_blanco@example.com\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -736,7 +736,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:8000/api/clients/6",
+									"raw": "http://localhost:8000/api/clients/10",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -745,7 +745,7 @@
 									"path": [
 										"api",
 										"clients",
-										"6"
+										"10"
 									]
 								}
 							},
@@ -1038,7 +1038,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"name\": \"limpieza piel\",\n    \"duration\": 25,\n    \"precio\": 14\n}",
+									"raw": "{\n    \"name\": \"Tratamiento corporal\",\n    \"duration\": 25,\n    \"precio\": 14\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1122,7 +1122,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n        \"duration\": 25\n}",
+									"raw": "{\n        \"duration\": 40,\n        \"precio\": 22.99\n\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1130,7 +1130,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:8000/api/services/1",
+									"raw": "http://localhost:8000/api/services/2",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -1139,7 +1139,7 @@
 									"path": [
 										"api",
 										"services",
-										"1"
+										"2"
 									]
 								}
 							},
@@ -1333,7 +1333,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"client_id\": 5,          \n    \"note\": \"señora maja\", \n    \"date\": \"2024-11-28\", \n    \"time\": \"12:30\",\n    \"services\": [1]\n}\n",
+									"raw": "{\n    \"client_id\": 1,          \n    \"note\": \"Cliente vip\", \n    \"date\": \"2024-11-28\", \n    \"startTime\": \"12:30\",\n    \"services\": [1,2]\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"

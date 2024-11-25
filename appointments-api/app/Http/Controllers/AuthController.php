@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Exception;
 
 class AuthController extends Controller
 {
@@ -19,16 +19,15 @@ class AuthController extends Controller
             return response()->json($users);
         } catch (Exception $e) {
             return response()->json([
-                'error' => 'Ocurrió un error al intentar cargar la lista de usuarios.'
-            ], 500);
+                'error' => 'Ocurrió un error al intentar cargar la lista de usuarios.'], 500);
         }
     }
 
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:100',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
         ], [
             'name.required' => 'El nombre es obligatorio.',
@@ -37,11 +36,11 @@ class AuthController extends Controller
             'email.email' => 'El correo electrónico no es válido.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            'password.confirmed' => 'La confirmación de la contraseña no coincide.'
+            'password.confirmed' => 'Las contraseñas no coinciden.'
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json($validator->errors(), 422);
         }
 
         try {
@@ -60,9 +59,7 @@ class AuthController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-            return response()->json([
-                'error' => 'Ocurrió un error al intentar registrar el usuario.'
-            ], 500);
+            return response()->json(['error' => 'Ocurrió un error al intentar registrar el usuario.'], 500);
         }
     }
 
@@ -116,7 +113,7 @@ class AuthController extends Controller
             JWTAuth::invalidate(JWTAuth::getToken());
             return response()->json(['message' => 'Sesión cerrada correctamente.'], 200);
         } catch (Exception $e) {
-            return response()->json(['error' => 'No se pudo cerrar la sesión.'], 500);
+            return response()->json(['error' => 'Ocurrio un error al intentar cerrar la sesión.'], 500);
         }
     }
 
@@ -129,22 +126,24 @@ class AuthController extends Controller
                 'expires_in' => JWTAuth::factory()->getTTL() * 60 
             ]);
         } catch (Exception $e) {
-            return response()->json(['error' => 'No se pudo refrescar el token.'], 500);
+            return response()->json(['error' => 'Ocurrio un error al intentar refrescar el token.'], 500);
         }
     }
 
     public function destroy($id)
     {
-        if (User::count() <= 1) {
-            return response()->json(['error' => 'No se puede eliminar el último usuario.'], 403);
-        }
-
         try {
             $user = User::findOrFail($id);
+    
+            if (User::count() <= 1) {
+                return response()->json(['error' => 'No se puede eliminar el último usuario.'], 403);
+            }
+    
             $user->delete();
             return response()->json(['message' => 'Usuario eliminado exitosamente.'], 200);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Usuario no encontrado'], 404);
+            return response()->json(['error' => 'Ocurrió un error al intentar eliminar el usuario.'], 500);
         }
-    }    
+    }
+     
 }

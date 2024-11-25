@@ -15,4 +15,16 @@ class AppointmentsView extends Model
 
     protected $primaryKey = null;
     public $incrementing = false;
+
+    protected $fillable = [
+        'appointment_id',
+        'date',
+        'startTime',
+        'endTime',
+        'note',
+        'client_id',
+        'client_name',
+        'client_phone',
+        'services',
+    ];
 }
